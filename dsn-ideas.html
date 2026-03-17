@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>DSN IDEAS — Dark School Net</title>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/dist/umd/supabase.min.js"></script>
+  <style>
+    :root {
+      --bg-base:       #0a0a0a;
+      --bg-surface:    #111111;
+      --bg-card:       #161616;
+      --bg-input:      #0e0e0e;
+      --border-subtle: #222222;
+      --border-mid:    #333333;
+      --border-active: #555555;
+      --text-primary:  #c8c8c8;
+      --text-secondary:#666666;
+      --text-muted:    #3a3a3a;
+      --text-white:    #e8e8e8;
+      --accent:        #5b8cff;
+      --accent-glow:   rgba(91,140,255,0.15);
+      --danger:        #ff4444;
+      --danger-glow:   rgba(255,68,68,0.12);
+      --success:       #44cc88;
+      --warning:       #ffaa33;
+      --admin:         #cc44ff;
+      --admin-glow:    rgba(204,68,255,0.15);
+    }
+
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: 'Barlow', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Scanlines */
+    body::before {
+      content:'';
+      position:fixed; inset:0;
+      background: repeating-linear-gradient(0deg,
+        transparent, transparent 2px,
+        rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 4px);
+      pointer-events:none; z-index:1000; opacity:.4;
+    }
+
+    /* Grid */
+    body::after {
+      content:'';
+      position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events:none; z-index:999;
+    }
+
+    /* ── Layout ──────────────────────────────────── */
+    .wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 4rem;
+      position: relative; z-index: 1;
+    }
+
+    /* ── Header ──────────────────────────────────── */
+    .hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-subtle);
+      flex-wrap: wrap; gap: 1rem;
+    }
+    .hdr-logo .brand {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: .62rem; letter-spacing:.35em; color:var(--text-secondary); text-transform:uppercase;
+      display: block;
+    }
+    .hdr-logo .title {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size: 2.2rem; letter-spacing:.1em; color:var(--text-white); text-transform:uppercase;
+      line-height: 1;
+    }
+    .hdr-logo .title em { color: var(--accent); font-style:normal; }
+    .hdr-right { display:flex; align-items:center; gap:1rem; }
+    .user-badge { text-align:right; }
+    .user-badge .name {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.85rem; font-weight:700; color:var(--text-white);
+      text-transform:uppercase; letter-spacing:.06em; display:block;
+    }
+    .user-badge .klasse {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.68rem; color:var(--text-secondary);
+      text-transform:uppercase; letter-spacing:.12em; display:block;
+    }
+
+    /* ── Buttons ─────────────────────────────────── */
+    .btn {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size:.78rem; letter-spacing:.13em; text-transform:uppercase;
+      padding:.6rem 1.2rem;
+      border: 1px solid var(--border-mid);
+      background: transparent; color:var(--text-primary);
+      cursor:pointer; position:relative; overflow:hidden;
+      transition: color .18s, border-color .18s;
+      white-space: nowrap;
+    }
+    .btn::before {
+      content:''; position:absolute; inset:0;
+      background: var(--accent);
+      transform: scaleX(0); transform-origin:left;
+      transition: transform .18s;
+    }
+    .btn span { position:relative; z-index:1; }
+    .btn:hover::before  { transform:scaleX(1); }
+    .btn:hover          { color:#000; border-color:var(--accent); }
+    .btn-accent         { border-color:var(--accent); color:var(--accent); }
+    .btn-danger         { border-color:var(--danger); color:var(--danger); }
+    .btn-danger::before { background:var(--danger); }
+    .btn-danger:hover   { color:#fff; }
+    .btn-success        { border-color:var(--success); color:var(--success); }
+    .btn-success::before{ background:var(--success); }
+    .btn-success:hover  { color:#000; }
+    .btn-warn           { border-color:var(--warning); color:var(--warning); }
+    .btn-warn::before   { background:var(--warning); }
+    .btn-warn:hover     { color:#000; }
+    .btn-admin          { border-color:var(--admin); color:var(--admin); }
+    .btn-admin::before  { background:var(--admin); }
+    .btn-admin:hover    { color:#fff; }
+    .btn-sm             { padding:.35rem .8rem; font-size:.7rem; }
+
+    /* ── Cycle Banner ────────────────────────────── */
+    .cycle-banner {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent);
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:1rem;
+    }
+    .cb-left .cnum {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size:1.35rem; letter-spacing:.1em; color:var(--text-white); text-transform:uppercase;
+    }
+    .cb-left .cdates {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.72rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.1em;
+    }
+    .cb-right { text-align:right; }
+    .cd-val {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size:1.6rem; color:var(--accent); letter-spacing:.05em;
+    }
+    .cd-val.expired { color:var(--danger); }
+    .cd-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.62rem; color:var(--text-secondary); text-transform:uppercase; letter-spacing:.18em;
+    }
+
+    .no-cycle-bar {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--text-muted);
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.82rem; color:var(--text-secondary);
+      text-transform:uppercase; letter-spacing:.1em;
+    }
+
+    /* ── Tabs ────────────────────────────────────── */
+    .tabs {
+      display:flex; gap:0;
+      margin-bottom:2rem;
+      border-bottom: 1px solid var(--border-subtle);
+      overflow-x:auto;
+    }
+    .tab {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size:.82rem; letter-spacing:.1em; text-transform:uppercase;
+      padding:.75rem 1.4rem;
+      cursor:pointer; color:var(--text-secondary);
+      border:none; background:none;
+      position:relative; transition:color .2s;
+      white-space:nowrap;
+    }
+    .tab::after {
+      content:''; position:absolute;
+      bottom:-1px; left:0; right:0; height:2px;
+      background:var(--accent);
+      transform:scaleX(0); transition:transform .2s;
+    }
+    .tab.active  { color:var(--text-white); }
+    .tab.active::after { transform:scaleX(1); }
+    .tab:hover   { color:var(--text-primary); }
+    .tab.t-admin { color:var(--admin); opacity:.65; }
+    .tab.t-admin.active { opacity:1; }
+    .tab.t-admin::after { background:var(--admin); }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; animation: fadeIn .25s ease; }
+
+    @keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes cardIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+    /* ── Section title ───────────────────────────── */
+    .sec-title {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size:1.05rem; letter-spacing:.15em; text-transform:uppercase;
+      color:var(--text-white);
+      display:flex; align-items:center; gap:.75rem;
+      margin-bottom:1rem;
+    }
+    .sec-title::after {
+      content:''; flex:1; height:1px; background:var(--border-subtle);
+    }
+
+    /* ── Card ────────────────────────────────────── */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      padding: 1.5rem;
+      margin-bottom:1rem;
+      position:relative;
+      animation: cardIn .3s ease;
+    }
+    .card::before {
+      content:''; position:absolute; top:0; left:0;
+      width:18px; height:18px;
+      border-top:2px solid var(--accent);
+      border-left:2px solid var(--accent);
+    }
+    .card::after {
+      content:''; position:absolute; bottom:0; right:0;
+      width:18px; height:18px;
+      border-bottom:2px solid var(--border-mid);
+      border-right:2px solid var(--border-mid);
+    }
+
+    /* ── Form ────────────────────────────────────── */
+    .fg { margin-bottom:1rem; }
+    .flabel {
+      display:block;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.72rem; letter-spacing:.16em; text-transform:uppercase;
+      color:var(--text-secondary); margin-bottom:.4rem;
+    }
+    input[type=text], input[type=password], textarea, select {
+      width:100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      color: var(--text-white);
+      padding:.75rem 1rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.9rem; outline:none;
+      transition: border-color .2s;
+      -webkit-appearance:none;
+    }
+    input:focus, textarea:focus, select:focus { border-color:var(--accent); }
+    input::placeholder, textarea::placeholder { color:var(--text-muted); }
+    textarea { resize:vertical; min-height:90px; }
+
+    /* ── Idea card ───────────────────────────────── */
+    .ic {
+      background:var(--bg-card);
+      border:1px solid var(--border-subtle);
+      padding:1.1rem 1.25rem;
+      margin-bottom:.65rem;
+      position:relative;
+      transition: border-color .2s;
+      animation: cardIn .3s ease;
+    }
+    .ic::before {
+      content:''; position:absolute; top:0; left:0;
+      width:12px; height:12px;
+      border-top:2px solid var(--accent);
+      border-left:2px solid var(--accent);
+    }
+    .ic:hover { border-color:var(--border-active); }
+    .ic-head { display:flex; align-items:flex-start; justify-content:space-between; gap:1rem; margin-bottom:.4rem; }
+    .ic-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight:700; font-size:.95rem; color:var(--text-white);
+      text-transform:uppercase; letter-spacing:.06em;
+    }
+    .ic-meta {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.68rem; color:var(--text-secondary);
+      text-transform:uppercase; letter-spacing:.1em;
+    }
+    .ic-desc { font-size:.83rem; color:var(--text-primary); line-height:1.55; margin:.45rem 0; }
+
+    /* ── Rating widget ───────────────────────────── */
+    .rw { display:flex; align-items:center; gap:.22rem; flex-wrap:wrap; margin-top:.6rem; }
+    .rw-label {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.68rem; color:var(--text-secondary);
+      text-transform:uppercase; letter-spacing:.1em;
+      margin-bottom:.35rem; display:block;
+    }
+    .rb {
+      width:30px; height:30px;
+      display:flex; align-items:center; justify-content:center;
+      border:1px solid var(--border-subtle);
+      background:var(--bg-input);
+      color:var(--text-secondary);
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.72rem; font-weight:600;
+      cursor:pointer; transition: all .13s;
+    }
+    .rb:hover   { border-color:var(--warning); color:var(--warning); }
+    .rb.sel     { background:var(--warning); color:#000; border-color:var(--warning); }
+    .avg-r {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size:1rem; color:var(--warning); letter-spacing:.04em;
+      margin-left:.5rem; white-space:nowrap;
+    }
+
+    /* ── Winner card ─────────────────────────────── */
+    .wc {
+      background:var(--bg-card);
+      border:1px solid var(--border-subtle);
+      padding:1.2rem 1.4rem;
+      margin-bottom:.7rem;
+      position:relative;
+      animation: cardIn .3s ease;
+    }
+    .wc::before {
+      content:''; position:absolute; top:0; left:0;
+      width:14px; height:14px;
+      border-top:2px solid var(--warning);
+      border-left:2px solid var(--warning);
+    }
+    .wc::after {
+      content:''; position:absolute; bottom:0; right:0;
+      width:14px; height:14px;
+      border-bottom:2px solid var(--border-mid);
+      border-right:2px solid var(--border-mid);
+    }
+    .wc-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight:700; font-size:1rem; color:var(--warning);
+      text-transform:uppercase; letter-spacing:.06em;
+    }
+
+    /* ── Status badges ───────────────────────────── */
+    .badge {
+      display:inline-flex; align-items:center; gap:.3rem;
+      padding:.18rem .6rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.62rem; font-weight:700;
+      letter-spacing:.15em; text-transform:uppercase;
+      border:1px solid; white-space:nowrap;
+    }
+    .b-pending  { border-color:var(--border-mid); color:var(--text-secondary); }
+    .b-progress { border-color:var(--warning); color:var(--warning); background:rgba(255,170,51,.07); }
+    .b-avail    { border-color:var(--success);  color:var(--success);  background:rgba(68,204,136,.07); }
+
+    /* ── Sub-count ───────────────────────────────── */
+    .sub-count {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.72rem; color:var(--text-secondary);
+      border:1px solid var(--border-subtle);
+      padding:.2rem .65rem;
+      text-transform:uppercase; letter-spacing:.1em;
+    }
+    .sub-count.full { border-color:var(--warning); color:var(--warning); }
+
+    /* ── Separator ───────────────────────────────── */
+    .sep { height:1px; background:var(--border-subtle); margin:1.5rem 0; }
+
+    /* ── Empty state ─────────────────────────────── */
+    .empty {
+      text-align:center;
+      padding:2.5rem 1.5rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.82rem; color:var(--text-muted);
+      text-transform:uppercase; letter-spacing:.12em;
+    }
+
+    /* ── Modal ───────────────────────────────────── */
+    .modal-bg {
+      position:fixed; inset:0;
+      background:rgba(0,0,0,.82);
+      z-index:5000;
+      display:flex; align-items:center; justify-content:center;
+      padding:1rem;
+    }
+    .modal {
+      background:var(--bg-surface);
+      border:1px solid var(--border-mid);
+      padding:2rem; width:100%; max-width:420px;
+      position:relative;
+      animation: cardIn .25s ease;
+    }
+    .modal::before {
+      content:''; position:absolute; top:0; left:0;
+      width:20px; height:20px;
+      border-top:2px solid var(--admin);
+      border-left:2px solid var(--admin);
+    }
+    .modal-title {
+      font-family: Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
+      font-size:1.15rem; letter-spacing:.1em; text-transform:uppercase;
+      color:var(--admin); margin-bottom:1.4rem;
+    }
+    .err-msg {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.72rem; color:var(--danger);
+      text-transform:uppercase; letter-spacing:.1em;
+      margin-top:.65rem;
+    }
+
+    /* ── Toast ───────────────────────────────────── */
+    .toast {
+      position:fixed; bottom:2rem; right:2rem;
+      background:var(--bg-surface);
+      border:1px solid var(--border-mid);
+      border-left:3px solid var(--accent);
+      padding:.7rem 1.2rem;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size:.82rem; color:var(--text-white);
+      z-index:9999;
+      animation: slideIn .25s ease;
+      max-width:300px;
+    }
+    .toast.err  { border-left-color:var(--danger); }
+    .toast.ok   { border-left-color:var(--success); }
+    .toast.warn { border-left-color:var(--warning); }
+    @keyframes slideIn {
+      from { transform:translateX(110%); opacity:0; }
+      to   { transform:translateX(0);    opacity:1; }
+    }
+
+    /* ── SQL setup box ───────────────────────────── */
+    .sql-box {
+      background:var(--bg-input);
+      border:1px solid var(--border-subtle);
+      padding:1rem;
+      font-family: monospace;
+      font-size:.72rem;
+      color:var(--text-secondary);
+      overflow-x:auto;
+      white-space:pre;
+      line-height:1.6;
+    }
+
+    /* ── Admin grid ──────────────────────────────── */
+    .admin-actions { display:flex; gap:.65rem; flex-wrap:wrap; }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media(max-width:600px){
+      .hdr { gap:.75rem; }
+      .cycle-banner { flex-direction:column; }
+    }
+
+    /* Accent overrides per context */
+    .card.admin-card::before { border-color:var(--admin); }
+  </style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <div class="hdr">
+    <div class="hdr-logo">
+      <span class="brand">Dark School Net</span>
+      <span class="title">DSN <em>IDEAS</em></span>
+    </div>
+    <div class="hdr-right">
+      <div class="user-badge">
+        <span class="name" id="hUser">—</span>
+        <span class="klasse" id="hGrade">Klasse —</span>
+      </div>
+      <button class="btn btn-sm" onclick="logout()"><span>Logout</span></button>
+    </div>
+  </div>
+
+  <!-- Cycle banner -->
+  <div id="cycleBanner" class="cycle-banner" style="display:none">
+    <div class="cb-left">
+      <div class="cnum" id="cbNum">Zyklus #—</div>
+      <div class="cdates" id="cbDates">—</div>
+    </div>
+    <div class="cb-right">
+      <div class="cd-val" id="cdVal">—</div>
+      <div class="cd-label">Verbleibend</div>
+    </div>
+  </div>
+  <div id="noCycleBanner" class="no-cycle-bar" style="display:none">
+    ⬛ Kein aktiver Zyklus — Admin muss einen neuen Zyklus starten.
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active"  data-tab="submit"  onclick="switchTab('submit')"><span>💡 Einreichen</span></button>
+    <button class="tab"         data-tab="rate"    onclick="switchTab('rate')"><span>⭐ Bewerten</span></button>
+    <button class="tab"         data-tab="winners" onclick="switchTab('winners')"><span>🏆 Gewinner</span></button>
+    <button class="tab t-admin" data-tab="admin"   onclick="switchTab('admin')" id="tabAdmin" style="display:none"><span>⚙ Admin</span></button>
+  </div>
+
+  <!-- ── TAB: Submit ────────────────────────────── -->
+  <div class="tab-content active" id="tab-submit">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem">
+      <div class="sec-title" style="margin:0;flex:1">Neue Idee Einreichen</div>
+      <div class="sub-count" id="subCountBadge">0 / 3 Eingereicht</div>
+    </div>
+
+    <div id="submitFormWrap">
+      <div class="card">
+        <div class="fg">
+          <label class="flabel">Titel der Webseite / App</label>
+          <input type="text" id="ideaTitle" placeholder="z.B. DSN MUSIC PLAYER" maxlength="70"/>
+        </div>
+        <div class="fg">
+          <label class="flabel">Beschreibung &amp; Idee</label>
+          <textarea id="ideaDesc" placeholder="Was soll die App können? Für wen ist sie? Besondere Features?" maxlength="500" rows="4"></textarea>
+        </div>
+        <button class="btn btn-accent" onclick="submitIdea()"><span>💡 Idee Einreichen</span></button>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+    <div class="sec-title">Meine Einreichungen</div>
+    <div id="myIdeasList"><div class="empty">Noch keine Einreichungen</div></div>
+  </div>
+
+  <!-- ── TAB: Rate ──────────────────────────────── -->
+  <div class="tab-content" id="tab-rate">
+    <div class="sec-title">Ideen Bewerten</div>
+    <p style="font-family:'Barlow Condensed',sans-serif;font-size:.78rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.5rem;">
+      Bewerte die Ideen anderer — eigene Ideen kannst du nicht bewerten. Skala: 1 (schwach) bis 10 (mega).
+    </p>
+    <div id="rateIdeasList"><div class="empty">Keine Ideen zum Bewerten</div></div>
+  </div>
+
+  <!-- ── TAB: Winners ───────────────────────────── -->
+  <div class="tab-content" id="tab-winners">
+    <div class="sec-title">🏆 Gewinner-Liste</div>
+    <p style="font-family:'Barlow Condensed',sans-serif;font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:1.5rem;">
+      Sortiert nach Datum · Idee mit der höchsten Durchschnittsbewertung gewinnt.
+    </p>
+    <div id="winnersList"><div class="empty">Noch keine Gewinner</div></div>
+  </div>
+
+  <!-- ── TAB: Admin ─────────────────────────────── -->
+  <div class="tab-content" id="tab-admin">
+
+    <!-- Zyklus Management -->
+    <div style="margin-bottom:2rem">
+      <div class="sec-title" style="color:var(--admin)">Zyklus Management</div>
+      <div class="card admin-card">
+        <div class="admin-actions">
+          <button class="btn btn-admin btn-sm" onclick="startNewCycle()"><span>▶ Neuen Zyklus Starten (2 Tage)</span></button>
+          <button class="btn btn-warn btn-sm"  onclick="closeCycle()"><span>⏹ Zyklus Schließen &amp; Gewinner Küren</span></button>
+        </div>
+        <p style="font-family:'Barlow Condensed',sans-serif;font-size:.72rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;margin-top:.9rem;">
+          Beim Schließen: Idee mit höchster Ø-Bewertung wird automatisch Gewinner.
+        </p>
+      </div>
+    </div>
+
+    <!-- Alle Einreichungen -->
+    <div style="margin-bottom:2rem">
+      <div class="sec-title" style="color:var(--admin)">Alle Einreichungen (Aktueller Zyklus)</div>
+      <div id="adminIdeasList"><div class="empty">Keine Einreichungen</div></div>
+    </div>
+
+    <!-- Gewinner verwalten -->
+    <div style="margin-bottom:2rem">
+      <div class="sec-title" style="color:var(--admin)">Gewinner Verwalten</div>
+      <div id="adminWinnersList"><div class="empty">Keine Gewinner</div></div>
+    </div>
+
+    <div class="sep"></div>
+
+    <!-- Admin PW -->
+    <div style="margin-bottom:2rem">
+      <div class="sec-title" style="color:var(--admin)">Admin Passwort Ändern</div>
+      <div class="card admin-card">
+        <div class="fg">
+          <label class="flabel">Neues Passwort</label>
+          <input type="password" id="adminNewPw" placeholder="Neues Passwort (min. 6 Zeichen)"/>
+        </div>
+        <button class="btn btn-admin btn-sm" onclick="changeAdminPw()"><span>Passwort Aktualisieren</span></button>
+      </div>
+    </div>
+
+    <!-- DB Setup SQL -->
+    <div>
+      <div class="sec-title" style="color:var(--admin)">Datenbank Setup SQL</div>
+      <p style="font-family:'Barlow Condensed',sans-serif;font-size:.75rem;color:var(--text-secondary);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.75rem;">
+        Einmalig in Supabase SQL Editor ausführen:
+      </p>
+      <div class="sql-box" id="setupSql"></div>
+    </div>
+
+  </div>
+</div><!-- /wrap -->
+
+<!-- Admin Login Modal -->
+<div class="modal-bg" id="adminModal" style="display:none">
+  <div class="modal">
+    <div class="modal-title">⚙ Admin Bereich</div>
+    <div class="fg">
+      <label class="flabel">Admin Passwort</label>
+      <input type="password" id="adminPwInput" placeholder="Passwort eingeben"
+             onkeydown="if(event.key==='Enter')checkAdminPw()"/>
+    </div>
+    <div style="display:flex;gap:.65rem;margin-top:1rem;">
+      <button class="btn btn-admin" onclick="checkAdminPw()"><span>Einloggen</span></button>
+      <button class="btn" onclick="closeAdminModal()"><span>Abbrechen</span></button>
+    </div>
+    <div class="err-msg" id="adminPwErr" style="display:none">Falsches Passwort</div>
+  </div>
+</div>
+
+<script>
+/* ─── Constants ───────────────────────────────────────── */
+const SUPABASE_URL  = 'https://sigjwzivusuzmhvixtbm.supabase.co';
+const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNpZ2p3eml2dXN1em1odml4dGJtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxNTI3MDksImV4cCI6MjA4ODcyODcwOX0.j0yB-NYM5HOkfKVBz24rWMBQNF8w-uEFjX55UGeD30E';
+const db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const ADMIN_PW_KEY   = 'dsn_admin_pw_hash';
+const ADMIN_SALT_KEY = 'dsn_admin_salt';
+const DEFAULT_ADMIN_PW = 'LoeweTiger123?!';
+
+const SETUP_SQL = `-- ── 1. CYCLES ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dsn_cycles (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  cycle_number INT NOT NULL,
+  start_at     TIMESTAMPTZ DEFAULT NOW(),
+  end_at       TIMESTAMPTZ NOT NULL,
+  is_closed    BOOLEAN DEFAULT FALSE,
+  created_at   TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE dsn_cycles ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "cy_sel" ON dsn_cycles FOR SELECT USING (true);
+CREATE POLICY "cy_ins" ON dsn_cycles FOR INSERT WITH CHECK (true);
+CREATE POLICY "cy_upd" ON dsn_cycles FOR UPDATE USING (true);
+CREATE POLICY "cy_del" ON dsn_cycles FOR DELETE USING (true);
+
+-- ── 2. IDEAS ────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dsn_ideas (
+  id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  cycle_id    UUID REFERENCES dsn_cycles(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL,
+  username    TEXT NOT NULL,
+  title       TEXT NOT NULL,
+  description TEXT,
+  created_at  TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE dsn_ideas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "id_sel" ON dsn_ideas FOR SELECT USING (true);
+CREATE POLICY "id_ins" ON dsn_ideas FOR INSERT WITH CHECK (true);
+CREATE POLICY "id_upd" ON dsn_ideas FOR UPDATE USING (true);
+CREATE POLICY "id_del" ON dsn_ideas FOR DELETE USING (true);
+
+-- ── 3. RATINGS ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dsn_ratings (
+  id         UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  idea_id    UUID REFERENCES dsn_ideas(id) ON DELETE CASCADE,
+  user_id    UUID NOT NULL,
+  cycle_id   UUID NOT NULL,
+  rating     INT NOT NULL CHECK (rating >= 1 AND rating <= 10),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE (idea_id, user_id)
+);
+ALTER TABLE dsn_ratings ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "ra_sel" ON dsn_ratings FOR SELECT USING (true);
+CREATE POLICY "ra_ins" ON dsn_ratings FOR INSERT WITH CHECK (true);
+CREATE POLICY "ra_upd" ON dsn_ratings FOR UPDATE USING (true);
+CREATE POLICY "ra_del" ON dsn_ratings FOR DELETE USING (true);
+
+-- ── 4. WINNERS ──────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS dsn_winners (
+  id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  idea_id      UUID REFERENCES dsn_ideas(id) ON DELETE SET NULL,
+  cycle_id     UUID REFERENCES dsn_cycles(id) ON DELETE SET NULL,
+  cycle_number INT NOT NULL,
+  title        TEXT NOT NULL,
+  description  TEXT,
+  username     TEXT NOT NULL,
+  avg_rating   NUMERIC NOT NULL,
+  rating_count INT NOT NULL,
+  status       TEXT DEFAULT 'pending',
+  won_at       TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE dsn_winners ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "wi_sel" ON dsn_winners FOR SELECT USING (true);
+CREATE POLICY "wi_ins" ON dsn_winners FOR INSERT WITH CHECK (true);
+CREATE POLICY "wi_upd" ON dsn_winners FOR UPDATE USING (true);
+CREATE POLICY "wi_del" ON dsn_winners FOR DELETE USING (true);`;
+
+/* ─── State ───────────────────────────────────────────── */
+let currentUser  = null;
+let currentCycle = null;
+let isAdmin      = false;
+let cdInterval   = null;
+let activeTab    = 'submit';
+
+/* ─── Crypto ──────────────────────────────────────────── */
+function genSalt() {
+  const b = new Uint8Array(32); crypto.getRandomValues(b);
+  return Array.from(b).map(x=>x.toString(16).padStart(2,'0')).join('');
+}
+async function hashPw(pw, saltHex) {
+  const enc  = new TextEncoder();
+  const salt = new Uint8Array(saltHex.match(/.{2}/g).map(h=>parseInt(h,16)));
+  const key  = await crypto.subtle.importKey('raw',enc.encode(pw),'PBKDF2',false,['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    {name:'PBKDF2',hash:'SHA-256',salt,iterations:200000},key,256);
+  return Array.from(new Uint8Array(bits)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function verifyPw(pw, saltHex, stored) {
+  return (await hashPw(pw,saltHex)) === stored;
+}
+
+/* ─── Session ─────────────────────────────────────────── */
+function getSession() {
+  try { return JSON.parse(sessionStorage.getItem('dsn_session')); } catch { return null; }
+}
+function logout() {
+  sessionStorage.clear();
+  window.location.href = 'index.html';
+}
+
+/* ─── Init ────────────────────────────────────────────── */
+async function init() {
+  currentUser = getSession();
+  if (!currentUser) { window.location.href = 'index.html'; return; }
+
+  document.getElementById('hUser').textContent  = currentUser.username;
+  document.getElementById('hGrade').textContent = 'Klasse ' + currentUser.grade;
+  document.getElementById('setupSql').textContent = SETUP_SQL;
+
+  // Restore admin session
+  if (sessionStorage.getItem('dsn_admin') === 'true') {
+    isAdmin = true;
+    document.getElementById('tabAdmin').style.display = '';
+  }
+
+  // Init default admin pw
+  if (!localStorage.getItem(ADMIN_SALT_KEY)) {
+    const s = genSalt();
+    const h = await hashPw(DEFAULT_ADMIN_PW, s);
+    localStorage.setItem(ADMIN_SALT_KEY, s);
+    localStorage.setItem(ADMIN_PW_KEY, h);
+  }
+
+  await loadActiveCycle();
+  await loadWinnersTab();
+
+  if (currentCycle) {
+    await loadMyIdeas();
+    await loadRateIdeas();
+  }
+  if (isAdmin && currentCycle) {
+    await loadAdminIdeas();
+    await loadAdminWinners();
+  }
+}
+
+/* ─── Cycles ──────────────────────────────────────────── */
+async function loadActiveCycle() {
+  const {data} = await db.from('dsn_cycles')
+    .select('*').eq('is_closed',false)
+    .order('created_at',{ascending:false}).limit(1);
+
+  if (data && data.length > 0) {
+    currentCycle = data[0];
+    showCycleBanner(true);
+    startCd();
+  } else {
+    currentCycle = null;
+    showCycleBanner(false);
+    document.getElementById('submitFormWrap').innerHTML =
+      '<div class="empty">Kein aktiver Zyklus</div>';
+  }
+}
+
+function showCycleBanner(active) {
+  document.getElementById('cycleBanner').style.display  = active ? '' : 'none';
+  document.getElementById('noCycleBanner').style.display = active ? 'none' : '';
+  if (!active) return;
+  document.getElementById('cbNum').textContent   = 'Zyklus #' + currentCycle.cycle_number;
+  const s = new Date(currentCycle.start_at), e = new Date(currentCycle.end_at);
+  document.getElementById('cbDates').textContent = fmtDate(s) + ' — ' + fmtDate(e);
+}
+
+function startCd() {
+  if (cdInterval) clearInterval(cdInterval);
+  tickCd();
+  cdInterval = setInterval(tickCd, 1000);
+}
+
+function tickCd() {
+  if (!currentCycle) return;
+  const diff = new Date(currentCycle.end_at) - Date.now();
+  const el = document.getElementById('cdVal');
+  if (diff <= 0) {
+    el.textContent = 'ABGELAUFEN';
+    el.classList.add('expired');
+    clearInterval(cdInterval);
+    return;
+  }
+  const h = Math.floor(diff/3600000),
+        m = Math.floor((diff%3600000)/60000),
+        s = Math.floor((diff%60000)/1000);
+  el.textContent = pad(h)+':'+pad(m)+':'+pad(s);
+  el.classList.remove('expired');
+}
+
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtDate(d){
+  return d.toLocaleDateString('de-DE',{day:'2-digit',month:'2-digit',year:'numeric'})
+    + ' ' + d.toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+}
+
+/* ─── Submit Idea ─────────────────────────────────────── */
+async function submitIdea() {
+  if (!currentCycle) return toast('Kein aktiver Zyklus','err');
+
+  const title = document.getElementById('ideaTitle').value.trim();
+  const desc  = document.getElementById('ideaDesc').value.trim();
+  if (!title) return toast('Titel eingeben','err');
+  if (!desc)  return toast('Beschreibung eingeben','err');
+
+  // Check count
+  const {data:ex} = await db.from('dsn_ideas')
+    .select('id').eq('cycle_id',currentCycle.id).eq('user_id',currentUser.id);
+  if (ex && ex.length >= 3) return toast('Max. 3 Ideen pro Zyklus!','warn');
+
+  const {error} = await db.from('dsn_ideas').insert({
+    cycle_id:    currentCycle.id,
+    user_id:     currentUser.id,
+    username:    currentUser.username,
+    title:       title.toUpperCase(),
+    description: desc
+  });
+  if (error) return toast('Fehler: '+error.message,'err');
+
+  document.getElementById('ideaTitle').value = '';
+  document.getElementById('ideaDesc').value  = '';
+  toast('Idee eingereicht!','ok');
+  await loadMyIdeas();
+  await loadRateIdeas();
+  if (isAdmin) await loadAdminIdeas();
+}
+
+/* ─── My Ideas ────────────────────────────────────────── */
+async function loadMyIdeas() {
+  if (!currentCycle) return;
+  const {data} = await db.from('dsn_ideas')
+    .select('*').eq('cycle_id',currentCycle.id).eq('user_id',currentUser.id)
+    .order('created_at',{ascending:true});
+
+  const n = data ? data.length : 0;
+  const badge = document.getElementById('subCountBadge');
+  badge.textContent = n+' / 3 Eingereicht';
+  badge.className   = 'sub-count'+(n>=3?' full':'');
+
+  const el = document.getElementById('myIdeasList');
+  if (!data||!data.length){ el.innerHTML='<div class="empty">Noch keine Einreichungen</div>'; return; }
+
+  el.innerHTML = data.map(i=>`
+    <div class="ic">
+      <div class="ic-head">
+        <div>
+          <div class="ic-title">${esc(i.title)}</div>
+          <div class="ic-meta">${fmtDate(new Date(i.created_at))}</div>
+        </div>
+        <div class="avg-r" id="avgMy${i.id}">⭐ —</div>
+      </div>
+      <div class="ic-desc">${esc(i.description)}</div>
+    </div>`).join('');
+
+  data.forEach(i=>fetchAvg(i.id,'avgMy'+i.id));
+}
+
+/* ─── Rate Ideas ──────────────────────────────────────── */
+async function loadRateIdeas() {
+  if (!currentCycle){ document.getElementById('rateIdeasList').innerHTML='<div class="empty">Kein aktiver Zyklus</div>'; return; }
+
+  const {data:ideas} = await db.from('dsn_ideas')
+    .select('*').eq('cycle_id',currentCycle.id).neq('user_id',currentUser.id)
+    .order('created_at',{ascending:true});
+
+  const {data:myR} = await db.from('dsn_ratings')
+    .select('*').eq('cycle_id',currentCycle.id).eq('user_id',currentUser.id);
+
+  const myMap = {};
+  if (myR) myR.forEach(r=>{ myMap[r.idea_id]=r.rating; });
+
+  const el = document.getElementById('rateIdeasList');
+  if (!ideas||!ideas.length){ el.innerHTML='<div class="empty">Noch keine fremden Ideen in diesem Zyklus</div>'; return; }
+
+  el.innerHTML = ideas.map(i=>{
+    const cur = myMap[i.id]||0;
+    const btns = [1,2,3,4,5,6,7,8,9,10].map(n=>
+      `<button class="rb${cur===n?' sel':''}" onclick="doRate('${i.id}',${n},'rw${i.id}')">${n}</button>`
+    ).join('');
+    return `
+      <div class="ic">
+        <div class="ic-head">
+          <div>
+            <div class="ic-title">${esc(i.title)}</div>
+            <div class="ic-meta">von ${esc(i.username)} · ${fmtDate(new Date(i.created_at))}</div>
+          </div>
+          <div class="avg-r" id="avgR${i.id}">⭐ —</div>
+        </div>
+        <div class="ic-desc">${esc(i.description)}</div>
+        <div style="margin-top:.7rem">
+          <span class="rw-label">Deine Bewertung:</span>
+          <div class="rw" id="rw${i.id}">${btns}</div>
+        </div>
+      </div>`;
+  }).join('');
+
+  ideas.forEach(i=>fetchAvg(i.id,'avgR'+i.id));
+}
+
+async function doRate(ideaId, rating, widgetId) {
+  const {error} = await db.from('dsn_ratings').upsert({
+    idea_id:  ideaId,
+    user_id:  currentUser.id,
+    cycle_id: currentCycle.id,
+    rating
+  },{onConflict:'idea_id,user_id'});
+  if (error) return toast('Fehler beim Bewerten','err');
+
+  const w = document.getElementById(widgetId);
+  if (w) w.querySelectorAll('.rb').forEach((b,i)=>{
+    b.classList.toggle('sel', i+1===rating);
+  });
+  fetchAvg(ideaId,'avgR'+ideaId);
+  // Also refresh my-ideas view avg
+  fetchAvg(ideaId,'avgMy'+ideaId);
+  toast('Bewertung gespeichert!','ok');
+}
+
+async function fetchAvg(ideaId, elId) {
+  const {data} = await db.from('dsn_ratings').select('rating').eq('idea_id',ideaId);
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!data||!data.length){ el.textContent='⭐ —'; return; }
+  const avg = (data.reduce((s,r)=>s+r.rating,0)/data.length).toFixed(1);
+  el.textContent = `⭐ ${avg} (${data.length})`;
+}
+
+/* ─── Winners Tab ─────────────────────────────────────── */
+async function loadWinnersTab() {
+  const {data} = await db.from('dsn_winners')
+    .select('*').order('won_at',{ascending:false});
+  renderWinners(data, 'winnersList', false);
+}
+
+function renderWinners(data, containerId, adminMode) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  if (!data||!data.length){ el.innerHTML='<div class="empty">Noch keine Gewinner</div>'; return; }
+
+  el.innerHTML = data.map(w=>{
+    const bCls  = w.status==='in_progress'?'b-progress': w.status==='available'?'b-avail':'b-pending';
+    const bTxt  = w.status==='in_progress'?'🔨 In Progress': w.status==='available'?'✅ Jetzt Verfügbar auf der Hauptseite':'⏳ Ausstehend';
+
+    const adminBtns = adminMode ? `
+      <div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.85rem;">
+        <button class="btn btn-warn btn-sm"    onclick="setWStatus('${w.id}','in_progress')"><span>🔨 In Progress</span></button>
+        <button class="btn btn-success btn-sm" onclick="setWStatus('${w.id}','available')"><span>✅ Jetzt Verfügbar</span></button>
+        <button class="btn btn-sm"             onclick="setWStatus('${w.id}','pending')"><span>↩ Zurücksetzen</span></button>
+        <button class="btn btn-danger btn-sm"  onclick="deleteWinner('${w.id}')"><span>🗑 Löschen</span></button>
+      </div>` : '';
+
+    return `
+      <div class="wc">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
+          <div>
+            <div class="wc-title">${esc(w.title)}</div>
+            <div class="ic-meta" style="margin-top:.3rem">
+              von ${esc(w.username)} · Zyklus #${w.cycle_number} · ${fmtDate(new Date(w.won_at))}
+            </div>
+            <div style="font-family:'Barlow Condensed',sans-serif;font-size:.72rem;color:var(--text-secondary);margin-top:.25rem">
+              Ø ${w.avg_rating} Punkte · ${w.rating_count} Bewertung${w.rating_count!==1?'en':''}
+            </div>
+          </div>
+          <span class="badge ${bCls}">${bTxt}</span>
+        </div>
+        ${w.description?`<div class="ic-desc" style="margin-top:.55rem">${esc(w.description)}</div>`:''}
+        ${adminBtns}
+      </div>`;
+  }).join('');
+}
+
+async function setWStatus(id, status) {
+  const {error} = await db.from('dsn_winners').update({status}).eq('id',id);
+  if (error) return toast('Fehler','err');
+  toast('Status aktualisiert','ok');
+  await loadWinnersTab();
+  await loadAdminWinners();
+}
+
+async function deleteWinner(id) {
+  if (!confirm('Gewinner-Eintrag wirklich löschen?')) return;
+  const {error} = await db.from('dsn_winners').delete().eq('id',id);
+  if (error) return toast('Fehler','err');
+  toast('Gewinner gelöscht','ok');
+  await loadWinnersTab();
+  await loadAdminWinners();
+}
+
+/* ─── Admin: Ideas ────────────────────────────────────── */
+async function loadAdminIdeas() {
+  if (!currentCycle){ document.getElementById('adminIdeasList').innerHTML='<div class="empty">Kein aktiver Zyklus</div>'; return; }
+  const {data} = await db.from('dsn_ideas')
+    .select('*').eq('cycle_id',currentCycle.id)
+    .order('created_at',{ascending:true});
+
+  const el = document.getElementById('adminIdeasList');
+  if (!data||!data.length){ el.innerHTML='<div class="empty">Keine Einreichungen im aktuellen Zyklus</div>'; return; }
+
+  el.innerHTML = data.map(i=>`
+    <div class="ic" id="aic${i.id}">
+      <div class="ic-head">
+        <div>
+          <div class="ic-title">${esc(i.title)}</div>
+          <div class="ic-meta">von ${esc(i.username)} · ${fmtDate(new Date(i.created_at))}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <div class="avg-r" id="avgAd${i.id}" style="font-size:.85rem">⭐ —</div>
+          <button class="btn btn-danger btn-sm" onclick="deleteIdea('${i.id}')"><span>🗑</span></button>
+        </div>
+      </div>
+      <div class="ic-desc">${esc(i.description)}</div>
+    </div>`).join('');
+
+  data.forEach(i=>fetchAvg(i.id,'avgAd'+i.id));
+}
+
+async function deleteIdea(ideaId) {
+  if (!confirm('Idee wirklich löschen?')) return;
+  await db.from('dsn_ratings').delete().eq('idea_id',ideaId);
+  const {error} = await db.from('dsn_ideas').delete().eq('id',ideaId);
+  if (error) return toast('Fehler','err');
+  toast('Idee gelöscht','ok');
+  document.getElementById('aic'+ideaId)?.remove();
+  await loadMyIdeas();
+  await loadRateIdeas();
+}
+
+/* ─── Admin: Winners ──────────────────────────────────── */
+async function loadAdminWinners() {
+  const {data} = await db.from('dsn_winners')
+    .select('*').order('won_at',{ascending:false});
+  renderWinners(data,'adminWinnersList',true);
+}
+
+/* ─── Cycle: Start ────────────────────────────────────── */
+async function startNewCycle() {
+  const {data:active} = await db.from('dsn_cycles')
+    .select('id').eq('is_closed',false).limit(1);
+  if (active&&active.length>0) return toast('Es gibt bereits einen aktiven Zyklus!','warn');
+
+  const {data:all} = await db.from('dsn_cycles')
+    .select('cycle_number').order('cycle_number',{ascending:false}).limit(1);
+  const num = all&&all.length>0 ? all[0].cycle_number+1 : 1;
+
+  const endAt = new Date(Date.now() + 2*24*60*60*1000);
+  const {error} = await db.from('dsn_cycles').insert({
+    cycle_number: num, end_at: endAt.toISOString()
+  });
+  if (error) return toast('Fehler: '+error.message,'err');
+  toast('Zyklus #'+num+' gestartet!','ok');
+  await loadActiveCycle();
+  await loadMyIdeas();
+  await loadRateIdeas();
+  await loadAdminIdeas();
+}
+
+/* ─── Cycle: Close ────────────────────────────────────── */
+async function closeCycle() {
+  if (!currentCycle) return toast('Kein aktiver Zyklus','err');
+  if (!confirm('Zyklus abschließen und Gewinner bestimmen?\n(Kann nicht rückgängig gemacht werden)')) return;
+
+  const {data:ideas} = await db.from('dsn_ideas')
+    .select('*').eq('cycle_id',currentCycle.id);
+
+  // Close cycle first
+  await db.from('dsn_cycles').update({is_closed:true}).eq('id',currentCycle.id);
+
+  if (!ideas||!ideas.length) {
+    toast('Zyklus geschlossen (keine Ideen eingereicht)','warn');
+    currentCycle = null; clearInterval(cdInterval);
+    await loadActiveCycle(); await loadAdminIdeas(); return;
+  }
+
+  // Find winner
+  let winner=null, topAvg=-1, topCount=0;
+  for (const idea of ideas) {
+    const {data:rats} = await db.from('dsn_ratings').select('rating').eq('idea_id',idea.id);
+    if (!rats||!rats.length) continue;
+    const avg = rats.reduce((s,r)=>s+r.rating,0)/rats.length;
+    if (avg>topAvg || (avg===topAvg && rats.length>topCount)) {
+      topAvg=avg; topCount=rats.length; winner={...idea,avg,cnt:rats.length};
+    }
+  }
+
+  if (winner) {
+    const {error} = await db.from('dsn_winners').insert({
+      idea_id:      winner.id,
+      cycle_id:     currentCycle.id,
+      cycle_number: currentCycle.cycle_number,
+      title:        winner.title,
+      description:  winner.description,
+      username:     winner.username,
+      avg_rating:   parseFloat(topAvg.toFixed(2)),
+      rating_count: topCount,
+      status:       'pending'
+    });
+    if (error) toast('Fehler beim Eintragen des Gewinners','err');
+    else toast('🏆 Gewinner: '+winner.title,'ok');
+  } else {
+    toast('Zyklus geschlossen (keine Bewertungen)','warn');
+  }
+
+  currentCycle = null; clearInterval(cdInterval);
+  document.getElementById('cdVal').textContent = '—';
+  await loadActiveCycle();
+  await loadWinnersTab();
+  await loadAdminWinners();
+  await loadMyIdeas();
+  await loadRateIdeas();
+  await loadAdminIdeas();
+}
+
+/* ─── Admin PW ────────────────────────────────────────── */
+async function changeAdminPw() {
+  const pw = document.getElementById('adminNewPw').value;
+  if (!pw||pw.length<6) return toast('Passwort zu kurz (min. 6 Zeichen)','err');
+  const s=genSalt(), h=await hashPw(pw,s);
+  localStorage.setItem(ADMIN_SALT_KEY,s);
+  localStorage.setItem(ADMIN_PW_KEY,h);
+  document.getElementById('adminNewPw').value='';
+  toast('Passwort geändert','ok');
+}
+
+/* ─── Admin Modal ─────────────────────────────────────── */
+function switchTab(tab) {
+  if (tab==='admin'&&!isAdmin) {
+    document.getElementById('adminModal').style.display='flex';
+    setTimeout(()=>document.getElementById('adminPwInput').focus(),100);
+    return;
+  }
+  activeTab = tab;
+  document.querySelectorAll('.tab').forEach(t=>
+    t.classList.toggle('active', t.dataset.tab===tab));
+  document.querySelectorAll('.tab-content').forEach(c=>
+    c.classList.toggle('active', c.id==='tab-'+tab));
+}
+
+async function checkAdminPw() {
+  const pw   = document.getElementById('adminPwInput').value;
+  const salt = localStorage.getItem(ADMIN_SALT_KEY);
+  const hash = localStorage.getItem(ADMIN_PW_KEY);
+  if (!salt||!hash) return;
+
+  const ok = await verifyPw(pw,salt,hash);
+  if (ok) {
+    isAdmin = true;
+    sessionStorage.setItem('dsn_admin','true');
+    document.getElementById('tabAdmin').style.display='';
+    document.getElementById('adminPwInput').value='';
+    closeAdminModal();
+    switchTab('admin');
+    await loadAdminIdeas();
+    await loadAdminWinners();
+  } else {
+    document.getElementById('adminPwErr').style.display='';
+  }
+}
+
+function closeAdminModal() {
+  document.getElementById('adminModal').style.display='none';
+  document.getElementById('adminPwErr').style.display='none';
+}
+
+/* ─── Utils ───────────────────────────────────────────── */
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+let _toastT;
+function toast(msg, type='') {
+  document.querySelector('.toast')?.remove();
+  const d=document.createElement('div');
+  d.className='toast '+(type||'');
+  d.textContent=msg;
+  document.body.appendChild(d);
+  clearTimeout(_toastT);
+  _toastT=setTimeout(()=>d.remove(),3200);
+}
+
+/* ─── Boot ────────────────────────────────────────────── */
+init();
+</script>
+</body>
+</html>
